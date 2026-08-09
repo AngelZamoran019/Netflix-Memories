@@ -16,9 +16,13 @@ export default function Dashboard({
 
 }){
 
-    const[projects,setProjects]=useState([]);
+const[projects,setProjects]=useState([]);
 
-    const[publishingId,setPublishingId]=useState(null);
+const[publishingId,setPublishingId]=useState(null);
+
+
+
+
 
     useEffect(()=>{
 
@@ -60,203 +64,132 @@ export default function Dashboard({
 
     }
 
-    async function handlePublish(project){
+async function handlePublish(project){
 
-        if(publishingId){
+    if(
+        publishingId
+    ){
+        return;
+    }
 
-            return;
+    try{
 
-        }
-
-        const confirmed=window.confirm(
-
-            "Este proyecto se preparará para publicación y después podrás continuar con el pago de $110 MXN. ¿Quieres continuar?"
-
+        setPublishingId(
+            project.id
         );
 
-        if(!confirmed){
+const html=
+    createHTML(project);
 
-            return;
+        if(
+            typeof html!=="string" ||
+            !html.trim()
+        ){
+
+            throw new Error(
+                "No fue posible generar el proyecto."
+            );
 
         }
 
-        try{
-
-            setPublishingId(project.id);
-
-            const html=
-
-                createHTML(project);
-
-            if(
-
-                typeof html!=="string" ||
-
-                !html.trim()
-
-            ){
-
-                throw new Error(
-
-                    "No fue posible generar el HTML del proyecto."
-
-                );
-
-            }
-
-            const prepareResponse=
-
-                await fetch(
-
-                    "/.netlify/functions/prepare-payment",
-
-                    {
-
-                        method:"POST",
-
-                        headers:{
-
-                            "Content-Type":
-
-                                "application/json"
-
-                        },
-
-                        body:
-
-                            JSON.stringify({
-
-                                project,
-
-                                html
-
-                            })
-
-                    }
-
-                );
-
-            const prepareData=
-
-                await prepareResponse.json();
-
-            if(!prepareResponse.ok){
-
-                throw new Error(
-
-                    prepareData?.error ||
-
-                    "No fue posible preparar el proyecto para publicación."
-
-                );
-
-            }
-
-            if(
-
-                !prepareData?.projectId
-
-            ){
-
-                throw new Error(
-
-                    "No se recibió el ID del proyecto."
-
-                );
-
-            }
-
-            const checkoutResponse=
-
-                await fetch(
-
-                    "/.netlify/functions/create-checkout",
-
-                    {
-
-                        method:"POST",
-
-                        headers:{
-
-                            "Content-Type":
-
-                                "application/json"
-
-                        },
-
-                        body:
-
-                            JSON.stringify({
-
-                                projectId:
-
-                                    prepareData.projectId
-
-                            })
-
-                    }
-
-                );
-
-            const checkoutData=
-
-                await checkoutResponse.json();
-
-            if(!checkoutResponse.ok){
-
-                throw new Error(
-
-                    checkoutData?.error ||
-
-                    "No fue posible crear el pago."
-
-                );
-
-            }
-
-            if(
-
-                !checkoutData?.checkoutUrl ||
-
-                typeof checkoutData.checkoutUrl!=="string"
-
-            ){
-
-                throw new Error(
-
-                    "Stripe no devolvió una URL de pago válida."
-
-                );
-
-            }
-
-            window.location.href=
-
-                checkoutData.checkoutUrl;
-
-        }catch(error){
-
-            console.error(
-
-                "Error al publicar proyecto:",
-
-                error
-
+        const prepareResponse=
+            await fetch(
+                "/.netlify/functions/prepare-payment",
+                {
+                    method:"POST",
+                    headers:{
+                        "Content-Type":
+                            "application/json"
+                    },
+                    body:
+                        JSON.stringify({
+                            project,
+                            html
+                        })
+                }
             );
 
-            window.alert(
+        const prepareData=
+            await prepareResponse.json();
 
-                error?.message ||
+        if(!prepareResponse.ok){
 
-                "No fue posible iniciar la publicación."
-
+            throw new Error(
+                prepareData?.error ||
+                "No fue posible preparar el proyecto para publicación."
             );
-
-            setPublishingId(null);
 
         }
+
+        if(
+            !prepareData?.projectId
+        ){
+
+            throw new Error(
+                "No se recibió el ID público del proyecto."
+            );
+
+        }
+
+        const checkoutResponse=
+            await fetch(
+                "/.netlify/functions/create-checkout",
+                {
+                    method:"POST",
+                    headers:{
+                        "Content-Type":
+                            "application/json"
+                    },
+                    body:
+                        JSON.stringify({
+                            projectId:
+                                prepareData.projectId
+                        })
+                }
+            );
+
+        const checkoutData=
+            await checkoutResponse.json();
+
+        if(!checkoutResponse.ok){
+
+            throw new Error(
+                checkoutData?.error ||
+                "No fue posible crear el pago."
+            );
+
+        }
+
+        if(
+            !checkoutData?.checkoutUrl
+        ){
+
+            throw new Error(
+                "Stripe no devolvió una URL de pago válida."
+            );
+
+        }
+
+        window.location.href=
+            checkoutData.checkoutUrl;
+
+    }catch(error){
+
+        console.error(
+            "Error al publicar proyecto:",
+            error
+        );
+
+        window.alert(
+            error?.message ||
+            "No fue posible iniciar la publicación."
+        );
+
+        setPublishingId(null);
 
     }
+
+}
 
     return(
 
@@ -457,6 +390,7 @@ export default function Dashboard({
                 }
 
             </section>
+
 
         </main>
 

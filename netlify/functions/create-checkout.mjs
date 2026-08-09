@@ -161,8 +161,10 @@ export default async (request) => {
       process.env.DEPLOY_PRIME_URL ||
       new URL(request.url).origin;
 
-    const successUrl =
-      `${siteUrl}/?payment=success&session_id={CHECKOUT_SESSION_ID}`;
+const successUrl =
+      `${siteUrl}/p/${encodeURIComponent(
+        projectId
+      )}?payment=success&session_id={CHECKOUT_SESSION_ID}`;
 
     const cancelUrl =
       `${siteUrl}/?payment=cancelled&project_id=${encodeURIComponent(
