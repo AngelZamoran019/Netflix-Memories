@@ -4,6 +4,8 @@ import {getProjects} from "../data/projects/projectManager";
 
 import exportProject from "../exportV2/exportProject";
 
+import createHTML from "../exportV2/createHTML";
+
 export default function Dashboard({
 
     onCreate,
@@ -15,6 +17,8 @@ export default function Dashboard({
 }){
 
     const[projects,setProjects]=useState([]);
+
+    const[publishingId,setPublishingId]=useState(null);
 
     useEffect(()=>{
 
@@ -53,6 +57,204 @@ export default function Dashboard({
     function handleExport(project){
 
         exportProject(project);
+
+    }
+
+    async function handlePublish(project){
+
+        if(publishingId){
+
+            return;
+
+        }
+
+        const confirmed=window.confirm(
+
+            "Este proyecto se preparará para publicación y después podrás continuar con el pago de $110 MXN. ¿Quieres continuar?"
+
+        );
+
+        if(!confirmed){
+
+            return;
+
+        }
+
+        try{
+
+            setPublishingId(project.id);
+
+            const html=
+
+                createHTML(project);
+
+            if(
+
+                typeof html!=="string" ||
+
+                !html.trim()
+
+            ){
+
+                throw new Error(
+
+                    "No fue posible generar el HTML del proyecto."
+
+                );
+
+            }
+
+            const prepareResponse=
+
+                await fetch(
+
+                    "/.netlify/functions/prepare-payment",
+
+                    {
+
+                        method:"POST",
+
+                        headers:{
+
+                            "Content-Type":
+
+                                "application/json"
+
+                        },
+
+                        body:
+
+                            JSON.stringify({
+
+                                project,
+
+                                html
+
+                            })
+
+                    }
+
+                );
+
+            const prepareData=
+
+                await prepareResponse.json();
+
+            if(!prepareResponse.ok){
+
+                throw new Error(
+
+                    prepareData?.error ||
+
+                    "No fue posible preparar el proyecto para publicación."
+
+                );
+
+            }
+
+            if(
+
+                !prepareData?.projectId
+
+            ){
+
+                throw new Error(
+
+                    "No se recibió el ID del proyecto."
+
+                );
+
+            }
+
+            const checkoutResponse=
+
+                await fetch(
+
+                    "/.netlify/functions/create-checkout",
+
+                    {
+
+                        method:"POST",
+
+                        headers:{
+
+                            "Content-Type":
+
+                                "application/json"
+
+                        },
+
+                        body:
+
+                            JSON.stringify({
+
+                                projectId:
+
+                                    prepareData.projectId
+
+                            })
+
+                    }
+
+                );
+
+            const checkoutData=
+
+                await checkoutResponse.json();
+
+            if(!checkoutResponse.ok){
+
+                throw new Error(
+
+                    checkoutData?.error ||
+
+                    "No fue posible crear el pago."
+
+                );
+
+            }
+
+            if(
+
+                !checkoutData?.checkoutUrl ||
+
+                typeof checkoutData.checkoutUrl!=="string"
+
+            ){
+
+                throw new Error(
+
+                    "Stripe no devolvió una URL de pago válida."
+
+                );
+
+            }
+
+            window.location.href=
+
+                checkoutData.checkoutUrl;
+
+        }catch(error){
+
+            console.error(
+
+                "Error al publicar proyecto:",
+
+                error
+
+            );
+
+            window.alert(
+
+                error?.message ||
+
+                "No fue posible iniciar la publicación."
+
+            );
+
+            setPublishingId(null);
+
+        }
 
     }
 
@@ -142,9 +344,55 @@ export default function Dashboard({
 
                                             }}
 
+                                            disabled={
+
+                                                publishingId!==null
+
+                                            }
+
                                         >
 
                                             Editar
+
+                                        </button>
+
+                                        <button
+
+                                            className="creator-publish-project"
+
+                                            onClick={()=>{
+
+                                                handlePublish(
+
+                                                    project
+
+                                                );
+
+                                            }}
+
+                                            disabled={
+
+                                                publishingId!==null
+
+                                            }
+
+                                        >
+
+                                            {
+
+                                                publishingId===
+
+                                                project.id
+
+                                                ?
+
+                                                "Preparando..."
+
+                                                :
+
+                                                "Publicar"
+
+                                            }
 
                                         </button>
 
@@ -157,6 +405,12 @@ export default function Dashboard({
                                                 handleExport(project);
 
                                             }}
+
+                                            disabled={
+
+                                                publishingId!==null
+
+                                            }
 
                                         >
 
@@ -177,6 +431,12 @@ export default function Dashboard({
                                                 );
 
                                             }}
+
+                                            disabled={
+
+                                                publishingId!==null
+
+                                            }
 
                                         >
 
