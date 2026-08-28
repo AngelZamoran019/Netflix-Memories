@@ -14,44 +14,87 @@ export default function PublicExperience({
     const[html,setHtml]=
         useState("");
 
-    const[title,setTitle]=
-        useState("Netflix Memories");
+const[title,setTitle]=
+    useState("Netflix Memories");
 
-    const[error,setError]=
-        useState("");
+const[priceCents,setPriceCents]=
+    useState(11000);
+
+const[currency,setCurrency]=
+    useState("MXN");
+
+const[error,setError]=
+    useState("");
+
+    const[paid,setPaid]=
+        useState(false);
 
     const[paymentSuccess,setPaymentSuccess]=
         useState(false);
 
-    const publicUrl=
-        useMemo(
+    const[paymentLoading,setPaymentLoading]=
+        useState(false);
 
-            ()=>{
+        const[shareOpen,setShareOpen]=
+    useState(false);
 
-                return(
-                    window.location.origin+
-                    "/p/"+
-                    encodeURIComponent(
-                        projectId
-                    )
-                );
+const experienceMode=
+    new URLSearchParams(
+        window.location.search
+    ).get("view")==="experience";
 
-            },
+const publicUrl=
+    useMemo(
 
-            [projectId]
+        ()=>{
 
-        );
+            return(
+                window.location.origin+
+                "/p/"+
+                encodeURIComponent(
+                    projectId
+                )
+            );
+
+        },
+
+        [projectId]
+
+    );
+
+const experienceUrl=
+    useMemo(
+
+        ()=>{
+
+            return(
+                publicUrl+
+                "?view=experience"
+            );
+
+        },
+
+        [publicUrl]
+
+    );
 
     async function loadProject(){
 
         try{
 
-            const response=
-                await fetch(
-                    "/.netlify/functions/get-public-project?id="+
-                    encodeURIComponent(
-                        projectId
-                    ),
+const response=
+    await fetch(
+        "/.netlify/functions/get-public-project?id="+
+        encodeURIComponent(
+            projectId
+        )+
+        (
+            experienceMode
+            ?
+            "&view=experience"
+            :
+            ""
+        ),
                     {
                         cache:"no-store"
                     }
@@ -59,14 +102,6 @@ export default function PublicExperience({
 
             const data=
                 await response.json();
-
-            if(response.status===402){
-
-                setStatus("pending");
-
-                return false;
-
-            }
 
             if(!response.ok){
 
@@ -91,16 +126,58 @@ export default function PublicExperience({
                 data.html
             );
 
-            setTitle(
-                data.title ||
-                "Netflix Memories"
-            );
+setTitle(
+    data.title ||
+    "Netflix Memories"
+);
+
+const loadedPriceCents=
+    Number(
+        data.priceCents
+    );
+
+setPriceCents(
+    Number.isInteger(
+        loadedPriceCents
+    ) &&
+    loadedPriceCents>0
+
+        ?
+
+        loadedPriceCents
+
+        :
+
+        11000
+);
+
+const loadedCurrency=
+    typeof data.currency==="string" &&
+    data.currency.trim()
+
+        ?
+
+        data.currency
+            .trim()
+            .toUpperCase()
+
+        :
+
+        "MXN";
+
+setCurrency(
+    loadedCurrency
+);
+
+setPaid(
+    data.paid===true
+);
 
             setStatus(
                 "ready"
             );
 
-            return true;
+            return data.paid===true;
 
         }catch(error){
 
@@ -127,6 +204,7 @@ export default function PublicExperience({
     useEffect(()=>{
 
         let cancelled=false;
+        let interval=null;
 
         async function initialize(){
 
@@ -135,35 +213,39 @@ export default function PublicExperience({
                     window.location.search
                 );
 
-            setPaymentSuccess(
+            const success=
                 params.get("payment")===
-                "success"
+                "success";
+
+            setPaymentSuccess(
+                success
             );
 
-            const loaded=
-                await loadProject();
+            await loadProject();
 
             if(
-                loaded ||
-                cancelled
+                cancelled ||
+                !success
             ){
+
                 return;
+
             }
 
             let attempts=0;
 
-            const interval=
+            interval=
                 window.setInterval(
                     async()=>{
 
                         attempts++;
 
-                        const ready=
+                        const projectPaid=
                             await loadProject();
 
                         if(
-                            ready ||
-                            attempts>=15 ||
+                            projectPaid ||
+                            attempts>=30 ||
                             cancelled
                         ){
 
@@ -171,19 +253,13 @@ export default function PublicExperience({
                                 interval
                             );
 
+                            interval=null;
+
                         }
 
                     },
                     2000
                 );
-
-            return()=>{
-
-                window.clearInterval(
-                    interval
-                );
-
-            };
 
         }
 
@@ -193,16 +269,26 @@ export default function PublicExperience({
 
             cancelled=true;
 
+            if(interval){
+
+                window.clearInterval(
+                    interval
+                );
+
+            }
+
         };
 
     },[projectId]);
 
-    function copyLink(){
+function copyLink(
+    url=publicUrl
+){
 
-        navigator.clipboard
-            ?.writeText(
-                publicUrl
-            )
+    navigator.clipboard
+        ?.writeText(
+            url
+        )
             .then(()=>{
 
                 window.alert(
@@ -212,12 +298,204 @@ export default function PublicExperience({
             })
             .catch(()=>{
 
-                window.prompt(
-                    "Copia este enlace:",
-                    publicUrl
-                );
+window.prompt(
+    "Copia este enlace:",
+    url
+);
 
             });
+
+    }
+
+function openExperience(){
+
+    window.open(
+        experienceUrl,
+        "_blank",
+        "noopener,noreferrer"
+    );
+
+}
+
+
+async function shareExperience(){
+
+    if(
+        navigator.share
+    ){
+
+        try{
+
+            await navigator.share({
+                title:
+                    title ||
+                    "Netflix Memories",
+                text:
+                    "Mira esta experiencia de Netflix Memories",
+                url:
+    experienceUrl
+            });
+
+        }catch(error){
+
+            if(
+                error?.name!=="AbortError"
+            ){
+
+                setShareOpen(
+                    true
+                );
+
+            }
+
+        }
+
+        return;
+
+    }
+
+    setShareOpen(
+        true
+    );
+
+}
+
+
+function downloadExperience(){
+
+    if(!html){
+
+        window.alert(
+            "La experiencia todavía no está disponible para descargar."
+        );
+
+        return;
+
+    }
+
+    const blob=
+        new Blob(
+            [
+                html
+            ],
+            {
+                type:
+                    "text/html;charset=utf-8"
+            }
+        );
+
+    const url=
+        URL.createObjectURL(
+            blob
+        );
+
+    const anchor=
+        document.createElement(
+            "a"
+        );
+
+    anchor.href=
+        url;
+
+    anchor.download=
+        "Netflix-Memories.html";
+
+    document.body.appendChild(
+        anchor
+    );
+
+    anchor.click();
+
+    anchor.remove();
+
+    window.setTimeout(
+        ()=>{
+            URL.revokeObjectURL(
+                url
+            );
+        },
+        1000
+    );
+
+}
+
+    async function handlePayment(){
+
+        if(
+            paymentLoading ||
+            paid
+        ){
+
+            return;
+
+        }
+
+        try{
+
+            setPaymentLoading(
+                true
+            );
+
+            const response=
+                await fetch(
+                    "/.netlify/functions/create-checkout",
+                    {
+                        method:"POST",
+
+                        headers:{
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+                                projectId
+                            })
+                    }
+                );
+
+            const data=
+                await response.json();
+
+            if(!response.ok){
+
+                throw new Error(
+                    data?.error ||
+                    "No fue posible iniciar el pago."
+                );
+
+            }
+
+            if(
+                !data?.checkoutUrl
+            ){
+
+                throw new Error(
+                    "Stripe no devolvió una URL de pago válida."
+                );
+
+            }
+
+            window.location.href=
+                data.checkoutUrl;
+
+        }catch(error){
+
+            console.error(
+                "Public checkout error:",
+                error
+            );
+
+            window.alert(
+                error?.message ||
+                "No fue posible iniciar el pago."
+            );
+
+            setPaymentLoading(
+                false
+            );
+
+        }
 
     }
 
@@ -236,34 +514,6 @@ export default function PublicExperience({
                     </p>
 
                 </div>
-
-            </main>
-
-        );
-
-    }
-
-    if(status==="pending"){
-
-        return(
-
-            <main className="public-experience-state">
-
-                <section className="public-experience-card">
-
-                    <h1>
-                        Preparando tu experiencia
-                    </h1>
-
-                    <p>
-                        Estamos esperando la confirmación del pago.
-                    </p>
-
-                    <p>
-                        Esta página se actualizará automáticamente.
-                    </p>
-
-                </section>
 
             </main>
 
@@ -304,40 +554,152 @@ export default function PublicExperience({
 
     }
 
+    const displayPrice=
+    Number.isInteger(
+        priceCents
+    ) &&
+    priceCents>0
+
+        ?
+
+        new Intl.NumberFormat(
+            "es-MX",
+            {
+                minimumFractionDigits:0,
+                maximumFractionDigits:2
+            }
+        ).format(
+            priceCents/100
+        )
+
+        :
+
+        "110";
+
+    const watermarkItems=
+        Array.from(
+            {
+                length:100
+            }
+        );
+
+        if(
+    experienceMode
+){
+
     return(
+
+        <main className="public-experience public-experience-only">
+
+            <iframe
+                title={title}
+                className="public-experience-frame"
+                srcDoc={html}
+                sandbox="allow-scripts allow-forms allow-modals"
+            />
+
+        </main>
+
+    );
+
+}
+
+    return(
+
+        
 
         <main className="public-experience">
 
-            {
+            <header className="public-preview-header">
 
-                paymentSuccess && (
+                
 
-                    <div className="public-payment-banner">
+                <div className="public-preview-title">
 
-                        <div>
+                    <span className="public-preview-back">
+                        ←
+                    </span>
 
-                            <strong>
-                                ¡Pago confirmado!
-                            </strong>
+                    <strong>
+                        Vista previa del proyecto
+                    </strong>
 
-                            <span>
-                                Tu experiencia ya está publicada.
-                            </span>
+                </div>
 
-                        </div>
+<div className="public-preview-actions">
 
-                        <button
-                            type="button"
-                            onClick={copyLink}
-                        >
-                            Copiar enlace
-                        </button>
+    {
+        paid && (
+            <>
+                <button
+                    type="button"
+                    className="public-action-button"
+                    onClick={openExperience}
+                >
+                    Abrir experiencia
+                </button>
 
-                    </div>
+                <button
+                    type="button"
+                    className="public-action-button"
+                    onClick={shareExperience}
+                >
+                    Compartir
+                </button>
 
-                )
+                <button
+                    type="button"
+                    className="public-action-button"
+                    onClick={downloadExperience}
+                >
+                    Descargar
+                </button>
+            </>
+        )
+    }
 
-            }
+    {
+        !paid && (
+            <>
+                <button
+                    type="button"
+                    className="public-copy-button"
+                    onClick={copyLink}
+                >
+                    Copiar enlace
+                </button>
+
+                <button
+                    type="button"
+                    className="public-unlock-button"
+                    onClick={handlePayment}
+                    disabled={paymentLoading}
+                >
+
+{
+    paymentLoading
+    ?
+    "Preparando..."
+    :
+    `Desbloquear por $${displayPrice} ${currency}`
+}
+
+                </button>
+            </>
+        )
+    }
+
+    {
+        paid && (
+            <div className="public-paid-badge">
+                ✓ Desbloqueado
+            </div>
+        )
+    }
+
+</div>
+
+            </header>
 
             <iframe
 
@@ -350,6 +712,142 @@ export default function PublicExperience({
                 sandbox="allow-scripts allow-forms allow-modals"
 
             />
+
+            {
+                !paid && (
+
+                    <div
+                        className="public-watermark"
+                        aria-hidden="true"
+                    >
+
+                        {
+                            watermarkItems.map(
+                                (_,index)=>(
+                                    <span
+                                        key={index}
+                                    >
+                                        Dangels Studio
+                                    </span>
+                                )
+                            )
+                        }
+
+                    </div>
+
+                )
+            }
+
+            {
+                paymentSuccess &&
+                !paid && (
+
+                    <div className="public-payment-status">
+
+                        Confirmando tu pago...
+
+                    </div>
+
+                )
+            }
+
+            {
+    shareOpen && (
+
+        <div
+            className="public-share-overlay"
+            onClick={()=>{
+                setShareOpen(
+                    false
+                );
+            }}
+        >
+
+            <section
+                className="public-share-modal"
+                onClick={(event)=>{
+                    event.stopPropagation();
+                }}
+            >
+
+                <button
+                    type="button"
+                    className="public-share-close"
+                    onClick={()=>{
+                        setShareOpen(
+                            false
+                        );
+                    }}
+                    aria-label="Cerrar"
+                >
+                    ×
+                </button>
+
+                <div className="public-share-heart">
+
+                    <div className="public-share-heart-inner">
+
+                        <img
+                            src={
+                                "https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=12&data="+
+                                encodeURIComponent(
+                                    publicUrl
+                                )
+                            }
+                            alt="Código QR de la experiencia"
+                            className="public-share-qr"
+                        />
+
+                    </div>
+
+                </div>
+
+                <h2>
+                    Comparte tu experiencia
+                </h2>
+
+                <p>
+                    Escanea el código QR o comparte el enlace.
+                </p>
+
+<div className="public-share-url">
+
+    {experienceUrl}
+
+</div>
+
+                <div className="public-share-modal-actions">
+
+<button
+    type="button"
+    onClick={()=>{
+        copyLink(
+            experienceUrl
+        );
+    }}
+>
+    Copiar enlace
+</button>
+
+                    {
+                        navigator.share && (
+                            <button
+                                type="button"
+                                onClick={shareExperience}
+                            >
+                                Compartir
+                            </button>
+                        )
+                    }
+
+                </div>
+
+            </section>
+
+        </div>
+
+    )
+}
 
         </main>
 

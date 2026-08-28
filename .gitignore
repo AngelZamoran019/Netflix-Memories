@@ -27,3 +27,11 @@ dist-ssr
 .env
 .env.*
 !.env.example
+# Local Netlify folder
+.netlify
+
+# Local test files / sensitive backups
+Datos.txt
+test-env.cjs
+test-stripe.cjs
+*.zip

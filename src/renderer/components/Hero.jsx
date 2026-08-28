@@ -133,6 +133,38 @@ export default function Hero({
 
             />
 
+            {
+
+                project?.heroBackgroundVideo &&
+
+                <video
+
+                    className={`
+
+                        cinema-background
+
+                        cinema-hero-background-video
+
+                        cinema-stage-${homeStage}
+
+                    `}
+
+                    src={project.heroBackgroundVideo}
+
+                    autoPlay
+
+                    muted
+
+                    loop
+
+                    playsInline
+
+                    aria-hidden="true"
+
+                />
+
+            }
+
             <div className="cinema-hero-overlay"/>
 
             <div className="cinema-hero-content">

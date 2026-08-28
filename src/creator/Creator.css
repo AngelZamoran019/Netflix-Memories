@@ -60,6 +60,119 @@
 
 }
 
+.creator-dashboard-header{
+
+    width:100%;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:20px;
+
+    margin-bottom:28px;
+
+}
+
+.creator-dashboard-title{
+
+    min-width:0;
+
+}
+
+.creator-dashboard-title h1{
+
+    margin:0;
+
+}
+
+.creator-dashboard-title p{
+
+    margin:7px 0 0;
+
+    color:#888;
+
+    font-size:13px;
+
+}
+
+.creator-dashboard-header-actions{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    flex-shrink:0;
+
+}
+
+.creator-logout{
+
+    min-height:40px;
+
+    padding:0 15px;
+
+    border:1px solid #3a3a3a;
+
+    border-radius:7px;
+
+    background:#181818;
+
+    color:#ddd;
+
+    font-size:13px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:
+        background .18s ease,
+        border-color .18s ease,
+        color .18s ease;
+
+}
+
+.creator-logout:hover{
+
+    background:#242424;
+
+    border-color:#555;
+
+    color:#fff;
+
+}
+
+@media(max-width:700px){
+
+    .creator-dashboard-header{
+
+        align-items:stretch;
+
+        flex-direction:column;
+
+    }
+
+    .creator-dashboard-header-actions{
+
+        width:100%;
+
+        flex-direction:column;
+
+    }
+
+    .creator-dashboard-header-actions button{
+
+        width:100%;
+
+    }
+
+}
+
 .creator-projects{
 
     width:100%;

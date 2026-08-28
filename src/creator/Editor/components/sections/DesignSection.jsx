@@ -48,6 +48,40 @@ export default function DesignSection(){
 
             </div>
 
+            <div className="editor-field">
+
+                <label>
+
+                    Video de fondo del Hero
+
+                </label>
+
+                <input
+
+                    className="editor-text-input"
+
+                    type="text"
+
+                    value={project.heroBackgroundVideo || ""}
+
+                    onChange={(e)=>{
+
+                        update(
+
+                            "heroBackgroundVideo",
+
+                            e.target.value
+
+                        );
+
+                    }}
+
+                    placeholder="URL directa del video de fondo"
+
+                />
+
+            </div>
+
         </div>
 
     );

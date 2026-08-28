@@ -12,7 +12,9 @@ export default function Dashboard({
 
     onEdit,
 
-    onDelete
+    onDelete,
+
+    onLogout
 
 }){
 
@@ -78,8 +80,8 @@ async function handlePublish(project){
             project.id
         );
 
-const html=
-    createHTML(project);
+        const html=
+            createHTML(project);
 
         if(
             typeof html!=="string" ||
@@ -109,8 +111,28 @@ const html=
                 }
             );
 
-        const prepareData=
-            await prepareResponse.json();
+        const responseText=
+            await prepareResponse.text();
+
+        let prepareData={};
+
+        try{
+
+            prepareData=
+                responseText
+                    ?
+                JSON.parse(responseText)
+                    :
+                {};
+
+        }catch{
+
+            throw new Error(
+                responseText ||
+                "El servidor devolvió una respuesta no válida."
+            );
+
+        }
 
         if(!prepareResponse.ok){
 
@@ -131,58 +153,23 @@ const html=
 
         }
 
-        const checkoutResponse=
-            await fetch(
-                "/.netlify/functions/create-checkout",
-                {
-                    method:"POST",
-                    headers:{
-                        "Content-Type":
-                            "application/json"
-                    },
-                    body:
-                        JSON.stringify({
-                            projectId:
-                                prepareData.projectId
-                        })
-                }
-            );
-
-        const checkoutData=
-            await checkoutResponse.json();
-
-        if(!checkoutResponse.ok){
-
-            throw new Error(
-                checkoutData?.error ||
-                "No fue posible crear el pago."
-            );
-
-        }
-
-        if(
-            !checkoutData?.checkoutUrl
-        ){
-
-            throw new Error(
-                "Stripe no devolvió una URL de pago válida."
-            );
-
-        }
-
         window.location.href=
-            checkoutData.checkoutUrl;
+            "/p/"+
+            encodeURIComponent(
+                prepareData.projectId
+            )+
+            "?preview=1";
 
     }catch(error){
 
         console.error(
-            "Error al publicar proyecto:",
+            "Error al preparar la vista previa:",
             error
         );
 
         window.alert(
             error?.message ||
-            "No fue posible iniciar la publicación."
+            "No fue posible preparar la vista previa."
         );
 
         setPublishingId(null);
@@ -195,23 +182,55 @@ const html=
 
         <main className="creator-dashboard">
 
-            <h1>
+<div className="creator-dashboard-header">
 
-                Creador De Recuerdos Netflix
+    <div className="creator-dashboard-title">
 
-            </h1>
+        <h1>
 
-            <button
+            Creador De Recuerdos Netflix
 
-                className="creator-new-project"
+        </h1>
 
-                onClick={onCreate}
+        <p>
 
-            >
+            Panel privado de administración
 
-                Nuevo proyecto
+        </p>
 
-            </button>
+    </div>
+
+    <div className="creator-dashboard-header-actions">
+
+        <button
+
+            className="creator-new-project"
+
+            onClick={onCreate}
+
+        >
+
+            Nuevo proyecto
+
+        </button>
+
+        <button
+
+            className="creator-logout"
+
+            type="button"
+
+            onClick={onLogout}
+
+        >
+
+            Cerrar sesión
+
+        </button>
+
+    </div>
+
+</div>
 
             <section className="creator-projects">
 

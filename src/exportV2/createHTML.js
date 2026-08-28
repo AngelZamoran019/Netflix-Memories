@@ -1,6 +1,6 @@
 import rendererCSS from "../renderer/NetflixRenderer.css?raw";
 
-const INTRO_VIDEO="https://aypgsriighcuegzuqmxj.supabase.co/storage/v1/object/public/PruebaNetflix/Video%20Inicial/YTDown.com_YouTube_Netflix-New-Logo-Animation-2019_Media_GV3HUDMQ-F8_001_1080p.mp4";
+const INTRO_VIDEO="https://vzluajyoibwbibdhhhmg.supabase.co/storage/v1/object/sign/PROYECTOS/MUESTRA/Video%20Intro/YTDown.com_YouTube_Netflix-Intro-1080p-Highest-Quality_Media_6Jg_rkKtJgo_001_1080p.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jNjliN2NmYS1jYjE5LTQyZjEtYjg5Ni03MDA3YzE3M2U3YzIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJQUk9ZRUNUT1MvTVVFU1RSQS9WaWRlbyBJbnRyby9ZVERvd24uY29tX1lvdVR1YmVfTmV0ZmxpeC1JbnRyby0xMDgwcC1IaWdoZXN0LVF1YWxpdHlfTWVkaWFfNkpnX3JrS3RKZ29fMDAxXzEwODBwLm1wNCIsInNjb3BlIjoiZG93bmxvYWQiLCJpYXQiOjE3ODc1NTkxMTgsImV4cCI6NTI4ODA1NTExOH0.bBUM1ylJBrmIZhdK_wnV5yYIIxIWC9SPYusZ0MtS1jo";
 
 const NETFLIX_LOGO="https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg";
 
@@ -608,14 +608,36 @@ function home(){
 
                     '</header>'+
 
-                    '<div '+
-                        'class="cinema-background cinema-stage-0" '+
-                        'id="bg" '+
-                        'style="background-image:url(\\''+
-                            e(background)+
-                        '\\')">'+
+                    (
 
-                    '</div>'+
+                        p.heroBackgroundVideo
+
+                        ?
+
+                        '<video '+
+                            'class="cinema-background cinema-hero-background-video cinema-stage-0" '+
+                            'id="bg" '+
+                            'src="'+
+                                e(p.heroBackgroundVideo)+
+                            '" '+
+                            'autoplay '+
+                            'muted '+
+                            'loop '+
+                            'playsinline '+
+                            'aria-hidden="true">'+
+                        '</video>'
+
+                        :
+
+                        '<div '+
+                            'class="cinema-background cinema-stage-0" '+
+                            'id="bg" '+
+                            'style="background-image:url(\\''+
+                                e(background)+
+                            '\\')">'+
+                        '</div>'
+
+                    )+
 
 
 
@@ -819,6 +841,16 @@ function stage(){
                     ()=>{
 
                         bg.className=
+
+                            bg.tagName==="VIDEO"
+
+                            ?
+
+                            "cinema-background cinema-hero-background-video cinema-stage-"+
+                            stageValue
+
+                            :
+
                             "cinema-background cinema-stage-"+
                             stageValue;
 
