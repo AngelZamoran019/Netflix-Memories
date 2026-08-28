@@ -39,7 +39,7 @@ export default function AdminLogin({ onLogin }){
         try{
 
             const response=await fetch(
-                "/.netlify/functions/admin-auth?action=login",
+                "/admin-auth?action=login",
                 {
                     method:"POST",
                     credentials:"include",
