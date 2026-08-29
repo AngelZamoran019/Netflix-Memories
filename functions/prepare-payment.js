@@ -281,7 +281,7 @@ function validateCurrency(
   };
 }
 
-export default async function onRequest(
+export async function onRequestPost(
   context
 ) {
   const {
