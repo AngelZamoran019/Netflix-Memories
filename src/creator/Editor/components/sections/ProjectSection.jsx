@@ -1,8 +1,4 @@
-import {useState} from "react";
-
 import {useNetflix} from "../../../../renderer/context/NetflixContext";
-
-import createHTML from "../../../../exportV2/createHTML";
 
 export default function ProjectSection({
 
@@ -18,10 +14,6 @@ export default function ProjectSection({
 
     }=useNetflix();
 
-    const[linkLoading,setLinkLoading]=useState(false);
-
-    const[publicLink,setPublicLink]=useState("");
-
     const priceCents=
         Number.isInteger(
             Number(project.priceCents)
@@ -33,118 +25,6 @@ export default function ProjectSection({
 
     const price=
         priceCents / 100;
-
-    async function createUnlockedLink(){
-
-        if(linkLoading){
-
-            return;
-
-        }
-
-        try{
-
-            setLinkLoading(true);
-            setPublicLink("");
-
-            const html=createHTML(project);
-
-            if(
-                typeof html!=="string" ||
-                !html.trim()
-            ){
-
-                throw new Error(
-                    "No fue posible generar el proyecto."
-                );
-
-            }
-
-            const response=await fetch(
-                "/create-project",
-                {
-                    method:"POST",
-                    credentials:"include",
-                    headers:{
-                        "Content-Type":"application/json"
-                    },
-                    body:JSON.stringify({
-                        projectData:project,
-                        html,
-                        priceCents,
-                        currency:project.currency||"MXN",
-                        unlocked:true
-                    })
-                }
-            );
-
-            const responseText=await response.text();
-
-            let data={};
-
-            try{
-
-                data=responseText
-                    ?
-                    JSON.parse(responseText)
-                    :
-                    {};
-
-            }catch{
-
-                throw new Error(
-                    responseText||
-                    "El servidor devolvió una respuesta no válida."
-                );
-
-            }
-
-            if(!response.ok){
-
-                throw new Error(
-                    data?.error||
-                    "No fue posible crear el link."
-                );
-
-            }
-
-            const projectId=data?.project?.id;
-
-            if(!projectId){
-
-                throw new Error(
-                    "No se recibió el ID público del proyecto."
-                );
-
-            }
-
-            const link=
-                window.location.origin+
-                "/p/"+
-                encodeURIComponent(projectId)+
-                "?view=experience";
-
-            setPublicLink(link);
-
-        }catch(error){
-
-            console.error(
-                "Error creando link desbloqueado:",
-                error
-            );
-
-            window.alert(
-                error?.message||
-                "No fue posible crear el link."
-            );
-
-        }finally{
-
-            setLinkLoading(false);
-
-        }
-
-    }
 
     return(
 
@@ -297,95 +177,6 @@ export default function ProjectSection({
                 Guardar
 
             </button>
-
-            <button
-
-                className="editor-save"
-
-                type="button"
-
-                onClick={createUnlockedLink}
-
-                disabled={linkLoading}
-
-            >
-
-                {
-                    linkLoading
-                        ?
-                    "Creando Link..."
-                        :
-                    "Link"
-                }
-
-            </button>
-
-            {
-
-                publicLink && (
-
-                    <div className="editor-field">
-
-                        <label>
-
-                            Link desbloqueado
-
-                        </label>
-
-                        <input
-
-                            className="editor-text-input"
-
-                            type="text"
-
-                            value={publicLink}
-
-                            readOnly
-
-                            onFocus={(e)=>{
-
-                                e.target.select();
-
-                            }}
-
-                        />
-
-                        <button
-
-                            className="editor-save"
-
-                            type="button"
-
-                            onClick={async()=>{
-
-                                try{
-
-                                    await navigator.clipboard.writeText(
-                                        publicLink
-                                    );
-
-                                }catch(error){
-
-                                    console.error(
-                                        "Error copiando link:",
-                                        error
-                                    );
-
-                                }
-
-                            }}
-
-                        >
-
-                            Copiar Link
-
-                        </button>
-
-                    </div>
-
-                )
-
-            }
 
         </div>
 
