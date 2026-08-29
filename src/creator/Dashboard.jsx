@@ -333,6 +333,30 @@ async function handleCreateUnlockedLink(project){
 
         <main className="creator-dashboard">
 
+            <style>
+
+                {`
+
+                    .creator-project-actions button{
+                        background:#2a2a2a;
+                        color:#fff;
+                    }
+
+                    .creator-project-actions button:hover:not(:disabled){
+                        background:#E50914;
+                        color:#fff;
+                        transform:scale(1.04);
+                    }
+
+                    .creator-project-actions button:disabled{
+                        cursor:not-allowed;
+                        opacity:.7;
+                    }
+
+                `}
+
+            </style>
+
 <div className="creator-dashboard-header">
 
     <div className="creator-dashboard-title">
