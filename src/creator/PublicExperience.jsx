@@ -84,7 +84,7 @@ const experienceUrl=
 
 const response=
     await fetch(
-        "/.netlify/functions/get-public-project?id="+
+        "/get-public-project?id="+
         encodeURIComponent(
             projectId
         )+
@@ -438,7 +438,7 @@ function downloadExperience(){
 
             const response=
                 await fetch(
-                    "/.netlify/functions/create-checkout",
+                    "/create-checkout",
                     {
                         method:"POST",
 
@@ -606,13 +606,9 @@ function downloadExperience(){
 
     return(
 
-        
-
         <main className="public-experience">
 
             <header className="public-preview-header">
-
-                
 
                 <div className="public-preview-title">
 
