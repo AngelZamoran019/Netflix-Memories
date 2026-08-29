@@ -22,6 +22,10 @@ const[projects,setProjects]=useState([]);
 
 const[publishingId,setPublishingId]=useState(null);
 
+const[linkLoadingId,setLinkLoadingId]=useState(null);
+
+const[publicLinks,setPublicLinks]=useState({});
+
 
 
 
@@ -179,6 +183,152 @@ const prepareResponse=
 
 }
 
+async function handleCreateUnlockedLink(project){
+
+    if(
+        linkLoadingId
+    ){
+        return;
+    }
+
+    try{
+
+        setLinkLoadingId(
+            project.id
+        );
+
+        const html=
+            createHTML(project);
+
+        if(
+            typeof html!=="string" ||
+            !html.trim()
+        ){
+
+            throw new Error(
+                "No fue posible generar el proyecto."
+            );
+
+        }
+
+        const response=
+            await fetch(
+                "/create-project",
+                {
+                    method:"POST",
+                    credentials:"include",
+                    headers:{
+                        "Content-Type":"application/json"
+                    },
+                    body:JSON.stringify({
+                        projectData:project,
+                        html,
+                        priceCents:
+                            Number.isInteger(
+                                Number(project.priceCents)
+                            )
+                                ?
+                            Number(project.priceCents)
+                                :
+                            11000,
+                        currency:
+                            project.currency ||
+                            "MXN",
+                        unlocked:true
+                    })
+                }
+            );
+
+        const responseText=
+            await response.text();
+
+        let data={};
+
+        try{
+
+            data=responseText
+                ?
+            JSON.parse(responseText)
+                :
+            {};
+
+        }catch{
+
+            throw new Error(
+                responseText ||
+                "El servidor devolvió una respuesta no válida."
+            );
+
+        }
+
+        if(!response.ok){
+
+            throw new Error(
+                data?.error ||
+                "No fue posible crear el link."
+            );
+
+        }
+
+        const projectId=
+            data?.project?.id;
+
+        if(!projectId){
+
+            throw new Error(
+                "No se recibió el ID público del proyecto."
+            );
+
+        }
+
+        const link=
+            window.location.origin+
+            "/p/"+
+            encodeURIComponent(projectId)+
+            "?view=experience";
+
+        setPublicLinks(
+            currentLinks=>({
+                ...currentLinks,
+                [project.id]:link
+            })
+        );
+
+        try{
+
+            await navigator.clipboard.writeText(
+                link
+            );
+
+        }catch(error){
+
+            console.warn(
+                "No fue posible copiar automáticamente el link:",
+                error
+            );
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Error creando link desbloqueado:",
+            error
+        );
+
+        window.alert(
+            error?.message ||
+            "No fue posible crear el link."
+        );
+
+    }finally{
+
+        setLinkLoadingId(null);
+
+    }
+
+}
+
     return(
 
         <main className="creator-dashboard">
@@ -283,6 +433,30 @@ const prepareResponse=
 
                                         </p>
 
+                                        {
+
+                                            publicLinks[project.id] && (
+
+                                                <a
+
+                                                    className="creator-public-link"
+
+                                                    href={publicLinks[project.id]}
+
+                                                    target="_blank"
+
+                                                    rel="noreferrer"
+
+                                                >
+
+                                                    {publicLinks[project.id]}
+
+                                                </a>
+
+                                            )
+
+                                        }
+
                                     </div>
 
                                     <div className="creator-project-actions">
@@ -299,7 +473,8 @@ const prepareResponse=
 
                                             disabled={
 
-                                                publishingId!==null
+                                                publishingId!==null ||
+                                                linkLoadingId!==null
 
                                             }
 
@@ -325,7 +500,8 @@ const prepareResponse=
 
                                             disabled={
 
-                                                publishingId!==null
+                                                publishingId!==null ||
+                                                linkLoadingId!==null
 
                                             }
 
@@ -361,13 +537,52 @@ const prepareResponse=
 
                                             disabled={
 
-                                                publishingId!==null
+                                                publishingId!==null ||
+                                                linkLoadingId!==null
 
                                             }
 
                                         >
 
                                             Exportar
+
+                                        </button>
+
+                                        <button
+
+                                            className="creator-link-project"
+
+                                            onClick={()=>{
+
+                                                handleCreateUnlockedLink(
+                                                    project
+                                                );
+
+                                            }}
+
+                                            disabled={
+
+                                                publishingId!==null ||
+                                                linkLoadingId!==null
+
+                                            }
+
+                                        >
+
+                                            {
+
+                                                linkLoadingId===
+                                                project.id
+
+                                                ?
+
+                                                "Creando..."
+
+                                                :
+
+                                                "Link"
+
+                                            }
 
                                         </button>
 
@@ -387,7 +602,8 @@ const prepareResponse=
 
                                             disabled={
 
-                                                publishingId!==null
+                                                publishingId!==null ||
+                                                linkLoadingId!==null
 
                                             }
 
