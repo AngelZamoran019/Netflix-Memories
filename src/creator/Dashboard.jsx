@@ -94,22 +94,23 @@ async function handlePublish(project){
 
         }
 
-        const prepareResponse=
-            await fetch(
-                "/prepare-payment",
-                {
-                    method:"POST",
-                    headers:{
-                        "Content-Type":
-                            "application/json"
-                    },
-                    body:
-                        JSON.stringify({
-                            project,
-                            html
-                        })
-                }
-            );
+const prepareResponse=
+    await fetch(
+        "/prepare-payment",
+        {
+            method:"POST",
+            credentials:"include",
+            headers:{
+                "Content-Type":
+                    "application/json"
+            },
+            body:
+                JSON.stringify({
+                    project,
+                    html
+                })
+        }
+    );
 
         const responseText=
             await prepareResponse.text();
