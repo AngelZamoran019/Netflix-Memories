@@ -215,6 +215,7 @@ export async function onRequest(context) {
       html,
       priceCents,
       currency = "MXN",
+      unlocked = false,
     } = body;
 
     if (!isPlainObject(projectData)) {
@@ -290,9 +291,11 @@ export async function onRequest(context) {
         html,
         price_cents: priceCents,
         currency: normalizedCurrency,
-        paid: false,
+        paid: unlocked === true,
         stripe_session_id: null,
-        paid_at: null,
+        paid_at: unlocked === true
+          ? new Date().toISOString()
+          : null,
       })
       .select(
         "id, price_cents, currency, paid, created_at"
