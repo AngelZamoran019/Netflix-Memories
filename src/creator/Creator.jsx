@@ -30,7 +30,7 @@ export default function Creator(){
         try{
 
             const response=await fetch(
-                "/.netlify/functions/admin-auth?action=check",
+                "/admin-auth?action=check",
                 {
                     method:"GET",
                     credentials:"include"
@@ -88,7 +88,7 @@ export default function Creator(){
         try{
 
             await fetch(
-                "/.netlify/functions/admin-auth?action=logout",
+                "/admin-auth?action=logout",
                 {
                     method:"POST",
                     credentials:"include"

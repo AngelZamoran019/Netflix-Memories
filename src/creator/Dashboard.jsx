@@ -96,7 +96,7 @@ async function handlePublish(project){
 
         const prepareResponse=
             await fetch(
-                "/.netlify/functions/prepare-payment",
+                "/prepare-payment",
                 {
                     method:"POST",
                     headers:{
