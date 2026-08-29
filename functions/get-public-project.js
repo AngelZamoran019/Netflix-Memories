@@ -18,21 +18,32 @@ function response(statusCode, body) {
   );
 }
 
-export default async function onRequest(context) {
-  const { request, env } = context;
+export async function onRequest(context) {
+  const {
+    request,
+    env,
+  } = context;
 
-  if (request.method === "OPTIONS") {
-    return new Response(null, {
-      status: 204,
-      headers,
-    });
+  if (
+    request.method === "OPTIONS"
+  ) {
+    return new Response(
+      null,
+      {
+        status: 204,
+        headers,
+      }
+    );
   }
 
-  if (request.method !== "GET") {
+  if (
+    request.method !== "GET"
+  ) {
     return response(
       405,
       {
-        error: "Method not allowed",
+        error:
+          "Method not allowed",
       }
     );
   }
