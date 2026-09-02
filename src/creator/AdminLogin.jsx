@@ -2,19 +2,19 @@ import { useState } from "react";
 
 import "./AdminLogin.css";
 
-export default function AdminLogin({ onLogin }){
+export default function AdminLogin({ onLogin }) {
 
-    const [username,setUsername]=useState("");
-    const [password,setPassword]=useState("");
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
 
-    const [loading,setLoading]=useState(false);
-    const [error,setError]=useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-    async function handleSubmit(event){
+    async function handleSubmit(event) {
 
         event.preventDefault();
 
-        if(loading){
+        if (loading) {
 
             return;
 
@@ -22,9 +22,9 @@ export default function AdminLogin({ onLogin }){
 
         setError("");
 
-        const cleanUsername=username.trim();
+        const cleanUsername = username.trim();
 
-        if(!cleanUsername || !password){
+        if (!cleanUsername || !password) {
 
             setError(
                 "Ingresa tu usuario y contraseña."
@@ -36,36 +36,36 @@ export default function AdminLogin({ onLogin }){
 
         setLoading(true);
 
-        try{
+        try {
 
-            const response=await fetch(
+            const response = await fetch(
                 "/admin-auth?action=login",
                 {
-                    method:"POST",
-                    credentials:"include",
-                    headers:{
-                        "Content-Type":"application/json"
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json"
                     },
-                    body:JSON.stringify({
-                        username:cleanUsername,
+                    body: JSON.stringify({
+                        username: cleanUsername,
                         password
                     })
                 }
             );
 
-            let data=null;
+            let data = null;
 
-            try{
+            try {
 
-                data=await response.json();
+                data = await response.json();
 
-            }catch{
+            } catch {
 
-                data=null;
+                data = null;
 
             }
 
-            if(!response.ok){
+            if (!response.ok) {
 
                 setError(
                     data?.error ||
@@ -76,7 +76,7 @@ export default function AdminLogin({ onLogin }){
 
             }
 
-            if(data?.authenticated){
+            if (data?.authenticated) {
 
                 setUsername("");
                 setPassword("");
@@ -92,7 +92,7 @@ export default function AdminLogin({ onLogin }){
                 "No fue posible iniciar sesión."
             );
 
-        }catch(error){
+        } catch (error) {
 
             console.error(
                 "Error iniciando sesión:",
@@ -103,7 +103,7 @@ export default function AdminLogin({ onLogin }){
                 "No se pudo conectar con el servidor."
             );
 
-        }finally{
+        } finally {
 
             setLoading(false);
 
@@ -111,24 +111,25 @@ export default function AdminLogin({ onLogin }){
 
     }
 
-    return(
+    return (
 
         <main className="admin-login">
 
             <section className="admin-login-card">
 
-                <div className="admin-login-logo">
+                <div className="admin-login-brand">
 
-                    <span>Netflix</span>
+                    <span>CARÁTULA</span>
+                    <strong>MEMORIES</strong>
 
                 </div>
 
                 <div className="admin-login-heading">
 
-                    <h1>CreadorRecuerdos</h1>
+                    <h1>Acceso privado</h1>
 
                     <p>
-                        Acceso privado
+                        Panel de administración de Carátula Memories
                     </p>
 
                 </div>
@@ -150,7 +151,7 @@ export default function AdminLogin({ onLogin }){
                         className="admin-login-input"
                         type="text"
                         value={username}
-                        onChange={(event)=>{
+                        onChange={(event) => {
                             setUsername(event.target.value);
                         }}
                         autoComplete="username"
@@ -173,7 +174,7 @@ export default function AdminLogin({ onLogin }){
                         className="admin-login-input"
                         type="password"
                         value={password}
-                        onChange={(event)=>{
+                        onChange={(event) => {
                             setPassword(event.target.value);
                         }}
                         autoComplete="current-password"
@@ -208,13 +209,17 @@ export default function AdminLogin({ onLogin }){
 
                             loading
                                 ? "VERIFICANDO..."
-                                : "INICIAR SESIÓN"
+                                : "ENTRAR AL EDITOR"
 
                         }
 
                     </button>
 
                 </form>
+
+                <p className="admin-login-disclaimer">
+                    Herramienta privada independiente. No pertenece ni está afiliada a Netflix.
+                </p>
 
             </section>
 
